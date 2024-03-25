@@ -142,7 +142,6 @@ class Trader:
             for order in result[product]:
                 print(order)
 
-
     def run(self, state: TradingState):
 
         # "AMETHYSTS", "STARFRUIT" 
