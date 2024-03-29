@@ -14,14 +14,15 @@ import copy
 INF = int(1e9)
 
 empty_dict = {'STARFRUIT' : 0, 'AMETHYSTS' : 0}
-
+class Cache: 
+    instr_dict = {'STARFRUIT' : [], 'AMETHYSTS' : []}
 class Trader:
     # order_depths: Dict[Symbol, OrderDepth]
 
     position = copy.deepcopy(empty_dict)
 
     # number of historical mid_price used to predict new mid_price
-    starfruit_dim = 4
+    starfruit_dim = 5
     starfruit_cache = []
     POSITION_LIMIT = {'STARFRUIT' : 20}
 
@@ -124,6 +125,7 @@ class Trader:
                 if trade.timestamp == state.timestamp-100:
                     print(f'We traded {product}, {trade.buyer}, {trade.seller}, {trade.quantity}, {trade.price}')
 
+    # line 130, in print_others_trades\\n    for trade in state.own_trades[product] error
     def print_others_trades(self, state:TradingState):
         '''
         Print bot trades of last iteration.
@@ -145,16 +147,14 @@ class Trader:
     def run(self, state: TradingState):
 
         # "AMETHYSTS", "STARFRUIT" 
+        # cache: Cache = jsonpickle.decode(state.traderData)
 
         # Initialize the method output dict as an empty dict
         result = {'AMETHYSTS' : [], 'STARFRUIT': []}
 
-        # Timestamp of last iteration
-        print(f'Last iterations timestamp: {state.timestamp-100}')
-
         # Print our own and other player's trades of last iteration
         self.print_own_trades(state)
-        self.print_others_trades(state)
+        # self.print_others_trades(state)
 
         # Save and print existing position at the beginning
         # of the iteration
@@ -162,16 +162,19 @@ class Trader:
         self.print_position()
         
 
-        # cache the "STARFRUIT" mid prices every round
-        if len(self.starfruit_cache) == self.starfruit_dim:
-            self.starfruit_cache.pop(0)
+        
 
+        # extract best bid and best ask from current order book
         _, bs_starfruit = self.values_extract(collections.OrderedDict(sorted(state.order_depths["STARFRUIT"].sell_orders.items())))
         _, bb_starfruit = self.values_extract(collections.OrderedDict(sorted(state.order_depths["STARFRUIT"].buy_orders.items(), reverse=True)), 1)
+
+
+        
 
         starfruit_lb = -INF
         starfruit_ub = INF
 
+        # replace +-INF to predicted mid price when cache is full
         if len(self.starfruit_cache) == self.starfruit_dim:
             starfruit_lb = self.calc_next_price_starfruit()-1
             starfruit_ub = self.calc_next_price_starfruit()+1
@@ -184,14 +187,21 @@ class Trader:
             orders = self.compute_orders_regression(product, order_depth, acc_bid[product], acc_ask[product], self.POSITION_LIMIT[product])
             result[product] += orders
 
+
+        # clear cache from one value
+        if len(self.starfruit_cache) == self.starfruit_dim:
+            self.starfruit_cache.pop(0)
+
+        # cache the new mid value
         self.starfruit_cache.append((bs_starfruit+bb_starfruit)/2)
+        
         
 
 
-
+        # print market orders
         self.print_market_orders(result)
 
-        traderData = "SAMPLE"
+        traderData ="SAMPLE"
         conversions = 1
 
         # returns a list of orders that the algo sends to the market
