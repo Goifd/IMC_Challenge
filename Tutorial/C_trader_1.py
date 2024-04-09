@@ -24,10 +24,10 @@ class Trader:
                 ask_quant = -19 - state.position["AMETHYSTS"]
                 bid_quant = 19 - state.position["AMETHYSTS"]
                 if state.position["AMETHYSTS"] > -19:
-                        orders.append(Order("AMETHYSTS", 10003, ask_quant))
+                        orders.append(Order("AMETHYSTS", 10004, ask_quant))
                         all_prices.add(ask_price)
                 if state.position["AMETHYSTS"] < 19:
-                        orders.append(Order("AMETHYSTS", 9997, bid_quant))
+                        orders.append(Order("AMETHYSTS", 9996, bid_quant))
                         all_prices.add(bid_price)
                 temp_store = state.position["AMETHYSTS"]
                 print(f"Bid Price @ {bid_price} Quantity @ {bid_quant}")

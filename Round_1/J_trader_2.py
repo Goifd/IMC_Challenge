@@ -13,18 +13,15 @@ import copy
 
 INF = int(1e9)
 
-empty_dict = {'STARFRUIT' : 0, 'AMETHYSTS' : 0}
-class Cache: 
-    instr_dict = {'STARFRUIT' : [], 'AMETHYSTS' : []}
 class Trader:
     # order_depths: Dict[Symbol, OrderDepth]
 
-    position = copy.deepcopy(empty_dict)
+    position = {'STARFRUIT' : 0, 'AMETHYSTS' : 0}
 
     # number of historical mid_price used to predict new mid_price
     starfruit_dim = 5
     starfruit_cache = []
-    POSITION_LIMIT = {'STARFRUIT' : 20}
+    POSITION_LIMIT = {'STARFRUIT' : 20, 'AMETHYSTS' : 0}
 
     def calc_next_price_starfruit(self):
         # bananas cache stores price from 1 day ago, current day resp
@@ -38,29 +35,25 @@ class Trader:
 
         return int(round(nxt_price))
     
-    def values_extract(self, order_dict, buy=0):
-        tot_vol = 0
-        best_val = -1
-        mxvol = -1
-
-        for ask, vol in order_dict.items():
-            if(buy==0):
-                vol *= -1
-            tot_vol += vol
-            if tot_vol > mxvol:
-                mxvol = vol
-                best_val = ask
+    def extract_best_order_price(self, order_depth, side):
+        '''
+        order_depth: state.order_depths[product]
+        '''
+        if len(order_depth.sell_orders) != 0 and side == 'sell':
+            best_ask, best_ask_amount = list(order_depth.sell_orders.items())[0]
+            return best_ask
+                
+        if len(order_depth.buy_orders) != 0 and side == 'buy':
+            best_bid, best_bid_amount = list(order_depth.buy_orders.items())[0]
+            return best_bid    
         
-        return tot_vol, best_val
-    
     def compute_orders_regression(self, product, order_depth, acc_bid, acc_ask, LIMIT):
         orders: list[Order] = []
-
         osell = collections.OrderedDict(sorted(order_depth.sell_orders.items()))
         obuy = collections.OrderedDict(sorted(order_depth.buy_orders.items(), reverse=True))
 
-        sell_vol, best_sell_pr = self.values_extract(osell)
-        buy_vol, best_buy_pr = self.values_extract(obuy, 1)
+        best_sell_pr = self.extract_best_order_price(order_depth, side='sell')
+        best_buy_pr  = self.extract_best_order_price(order_depth, side='buy')
 
         cpos = self.position[product]
 
@@ -146,35 +139,16 @@ class Trader:
 
     def run(self, state: TradingState):
 
-        # "AMETHYSTS", "STARFRUIT" 
-        # cache: Cache = jsonpickle.decode(state.traderData)
-
         # Initialize the method output dict as an empty dict
-        result = {'AMETHYSTS' : [], 'STARFRUIT': []}
-
-        # Print our own and other player's trades of last iteration
-        self.print_own_trades(state)
-        # self.print_others_trades(state)
-
-        # Save and print existing position at the beginning
-        # of the iteration
-        self.save_position(state)
-        self.print_position()
-        
-
-        
+        result = {'AMETHYSTS' : [], 'STARFRUIT': []}        
 
         # extract best bid and best ask from current order book
-        _, bs_starfruit = self.values_extract(collections.OrderedDict(sorted(state.order_depths["STARFRUIT"].sell_orders.items())))
-        _, bb_starfruit = self.values_extract(collections.OrderedDict(sorted(state.order_depths["STARFRUIT"].buy_orders.items(), reverse=True)), 1)
+        bs_starfruit = self.extract_best_order_price(state.order_depths["STARFRUIT"], side='sell')
+        bb_starfruit = self.extract_best_order_price(state.order_depths["STARFRUIT"], side='buy')
 
-
-        
-
+        # calculate own order prices
         starfruit_lb = -INF
         starfruit_ub = INF
-
-        # replace +-INF to predicted mid price when cache is full
         if len(self.starfruit_cache) == self.starfruit_dim:
             starfruit_lb = self.calc_next_price_starfruit()-1
             starfruit_ub = self.calc_next_price_starfruit()+1
@@ -188,18 +162,10 @@ class Trader:
             result[product] += orders
 
 
-        # clear cache from one value
+        # clear cache from one value if full and cache the new mid value
         if len(self.starfruit_cache) == self.starfruit_dim:
             self.starfruit_cache.pop(0)
-
-        # cache the new mid value
         self.starfruit_cache.append((bs_starfruit+bb_starfruit)/2)
-        
-        
-
-
-        # print market orders
-        self.print_market_orders(result)
 
         traderData ="SAMPLE"
         conversions = 1
