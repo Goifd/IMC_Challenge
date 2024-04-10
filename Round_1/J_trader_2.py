@@ -48,33 +48,9 @@ class Trader:
         if len(order_depth.buy_orders) != 0 and side == 'buy':
             best_bid, best_bid_amount = list(order_depth.buy_orders.items())[-1]
             return best_bid
-
-        # tot_vol = 0
-        # best_val = -1
-        # mxvol = -1
-
-        # if side=='buy':
-        #     buy=1
-        #     order_dict = order_depth.buy_orders
-        # else:
-        #     buy=0
-        #     order_dict = order_depth.sell_orders
-
-        # for ask, vol in order_dict.items():
-        #     print('val is: ', ask)
-        #     if(buy==0):
-        #         vol *= -1
-        #     tot_vol += vol
-        #     if tot_vol > mxvol:
-        #         mxvol = vol
-        #         best_val = ask
-        # print('best_val= ', best_val)
-        # return tot_vol, best_val
         
     def compute_orders_regression(self, product, order_depth, acc_bid, acc_ask, LIMIT):
         orders: list[Order] = []
-        osell = collections.OrderedDict(sorted(order_depth.sell_orders.items()))
-        obuy = collections.OrderedDict(sorted(order_depth.buy_orders.items(), reverse=True))
 
         best_sell_pr = self.extract_best_order_price(order_depth, side='sell')
         best_buy_pr  = self.extract_best_order_price(order_depth, side='buy')
@@ -86,6 +62,8 @@ class Trader:
 
         bid_pr = min(undercut_buy, acc_bid) # we will shift this by 1 to beat this price
         sell_pr = max(undercut_sell, acc_ask)
+        # bid_pr = acc_bid
+        # sell_pr = acc_ask
 
         if cpos < LIMIT:
             num = LIMIT - cpos
@@ -101,14 +79,6 @@ class Trader:
 
         return orders
 
-    def print_position(self):
-        '''
-        Prints all instrument positions.
-        '''
-        print("Our position:")
-        for key, val in self.position.items():
-            print(f'{key} position: {val}')
-
     def save_position(self, state:TradingState):
         '''
         Save the current position in every instrument.
@@ -116,34 +86,6 @@ class Trader:
         for key, val in state.position.items():
             self.position[key] = val
 
-    def print_own_trades(self, state:TradingState):
-        '''
-        Print own trades of last iteration.
-        '''
-        print("Own trades:")
-        for product in state.own_trades.keys():
-            for trade in state.own_trades[product]:
-                if trade.timestamp == state.timestamp-100:
-                    print(f'We traded {product}, {trade.buyer}, {trade.seller}, {trade.quantity}, {trade.price}')
-
-    # line 130, in print_others_trades\\n    for trade in state.own_trades[product] error
-    def print_others_trades(self, state:TradingState):
-        '''
-        Print bot trades of last iteration.
-        '''
-        print("Others trades:")
-        for product in state.market_trades.keys():
-            for trade in state.own_trades[product]:
-                if trade.timestamp == state.timestamp-100:
-                    print(f'Bots traded {product}, {trade.buyer}, {trade.seller}, {trade.quantity}, {trade.price}')
-
-    def print_market_orders(self, result):
-        '''
-        Print our marke orders of current iteration.
-        '''
-        for product in result.keys():
-            for order in result[product]:
-                print(order)
 
     def run(self, state: TradingState):
 
@@ -156,6 +98,8 @@ class Trader:
         bs_starfruit = self.extract_best_order_price(state.order_depths["STARFRUIT"], side='sell')
         bb_starfruit = self.extract_best_order_price(state.order_depths["STARFRUIT"], side='buy')
 
+        self.starfruit_cache.append((bs_starfruit+bb_starfruit)/2)
+        
         # calculate own order prices
         starfruit_lb = -INF
         starfruit_ub = INF
@@ -175,7 +119,7 @@ class Trader:
         # clear cache from one value if full and cache the new mid value
         if len(self.starfruit_cache) == self.starfruit_dim:
             self.starfruit_cache.pop(0)
-        self.starfruit_cache.append((bs_starfruit+bb_starfruit)/2)
+
 
         traderData ="SAMPLE"
         conversions = 1
