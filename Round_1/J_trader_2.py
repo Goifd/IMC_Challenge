@@ -39,13 +39,37 @@ class Trader:
         '''
         order_depth: state.order_depths[product]
         '''
+        # get highest ask
         if len(order_depth.sell_orders) != 0 and side == 'sell':
-            best_ask, best_ask_amount = list(order_depth.sell_orders.items())[0]
+            best_ask, best_ask_amount = list(order_depth.sell_orders.items())[-1]
             return best_ask
-                
+        
+        # get lowest bid
         if len(order_depth.buy_orders) != 0 and side == 'buy':
-            best_bid, best_bid_amount = list(order_depth.buy_orders.items())[0]
-            return best_bid    
+            best_bid, best_bid_amount = list(order_depth.buy_orders.items())[-1]
+            return best_bid
+
+        # tot_vol = 0
+        # best_val = -1
+        # mxvol = -1
+
+        # if side=='buy':
+        #     buy=1
+        #     order_dict = order_depth.buy_orders
+        # else:
+        #     buy=0
+        #     order_dict = order_depth.sell_orders
+
+        # for ask, vol in order_dict.items():
+        #     print('val is: ', ask)
+        #     if(buy==0):
+        #         vol *= -1
+        #     tot_vol += vol
+        #     if tot_vol > mxvol:
+        #         mxvol = vol
+        #         best_val = ask
+        # print('best_val= ', best_val)
+        # return tot_vol, best_val
         
     def compute_orders_regression(self, product, order_depth, acc_bid, acc_ask, LIMIT):
         orders: list[Order] = []
@@ -56,13 +80,6 @@ class Trader:
         best_buy_pr  = self.extract_best_order_price(order_depth, side='buy')
 
         cpos = self.position[product]
-
-        for ask, vol in osell.items():
-            if ((ask <= acc_bid) or ((self.position[product]<0) and (ask == acc_bid+1))) and cpos < LIMIT:
-                order_for = min(-vol, LIMIT - cpos)
-                cpos += order_for
-                assert(order_for >= 0)
-                orders.append(Order(product, ask, order_for))
 
         undercut_buy = best_buy_pr + 1
         undercut_sell = best_sell_pr - 1
@@ -76,15 +93,6 @@ class Trader:
             cpos += num
         
         cpos = self.position[product]
-        
-
-        for bid, vol in obuy.items():
-            if ((bid >= acc_ask) or ((self.position[product]>0) and (bid+1 == acc_ask))) and cpos > -LIMIT:
-                order_for = max(-vol, -LIMIT-cpos)
-                # order_for is a negative number denoting how much we will sell
-                cpos += order_for
-                assert(order_for <= 0)
-                orders.append(Order(product, bid, order_for))
 
         if cpos > -LIMIT:
             num = -LIMIT-cpos
@@ -140,7 +148,9 @@ class Trader:
     def run(self, state: TradingState):
 
         # Initialize the method output dict as an empty dict
-        result = {'AMETHYSTS' : [], 'STARFRUIT': []}        
+        result = {'AMETHYSTS' : [], 'STARFRUIT': []}     
+
+        self.save_position(state)   
 
         # extract best bid and best ask from current order book
         bs_starfruit = self.extract_best_order_price(state.order_depths["STARFRUIT"], side='sell')
