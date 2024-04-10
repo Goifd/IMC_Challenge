@@ -168,7 +168,8 @@ class Trader:
         _, bs_starfruit = self.values_extract(collections.OrderedDict(sorted(state.order_depths["STARFRUIT"].sell_orders.items())))
         _, bb_starfruit = self.values_extract(collections.OrderedDict(sorted(state.order_depths["STARFRUIT"].buy_orders.items(), reverse=True)), 1)
 
-
+        # cache the new mid value
+        self.starfruit_cache.append((bs_starfruit+bb_starfruit)/2)
         
 
         starfruit_lb = -INF
@@ -192,8 +193,7 @@ class Trader:
         if len(self.starfruit_cache) == self.starfruit_dim:
             self.starfruit_cache.pop(0)
 
-        # cache the new mid value
-        self.starfruit_cache.append((bs_starfruit+bb_starfruit)/2)
+
         
         
 

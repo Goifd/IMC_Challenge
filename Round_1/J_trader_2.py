@@ -41,12 +41,14 @@ class Trader:
         '''
         # get highest ask
         if len(order_depth.sell_orders) != 0 and side == 'sell':
-            best_ask, best_ask_amount = list(order_depth.sell_orders.items())[-1]
+            #best_ask, best_ask_amount = list(order_depth.sell_orders.items())[-1]
+            best_ask = next(iter(order_depth.sell_orders.items()))
             return best_ask
         
         # get lowest bid
         if len(order_depth.buy_orders) != 0 and side == 'buy':
-            best_bid, best_bid_amount = list(order_depth.buy_orders.items())[-1]
+            #best_bid, best_bid_amount = list(order_depth.buy_orders.items())[-1]
+            best_bid = next(iter(order_depth.buy_orders.items()))
             return best_bid
         
     def compute_orders_regression(self, product, order_depth, acc_bid, acc_ask, LIMIT):
@@ -99,7 +101,7 @@ class Trader:
         bb_starfruit = self.extract_best_order_price(state.order_depths["STARFRUIT"], side='buy')
 
         self.starfruit_cache.append((bs_starfruit+bb_starfruit)/2)
-        
+
         # calculate own order prices
         starfruit_lb = -INF
         starfruit_ub = INF
