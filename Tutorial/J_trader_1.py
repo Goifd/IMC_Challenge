@@ -64,12 +64,12 @@ class Trader:
 
         cpos = self.position[product]
 
-        # for ask, vol in osell.items():
-        #     if ((ask <= acc_bid) or ((self.position[product]<0) and (ask == acc_bid+1))) and cpos < LIMIT:
-        #         order_for = min(-vol, LIMIT - cpos)
-        #         cpos += order_for
-        #         assert(order_for >= 0)
-        #         orders.append(Order(product, ask, order_for))
+        for ask, vol in osell.items():
+            if ((ask <= acc_bid) or ((self.position[product]<0) and (ask == acc_bid+1))) and cpos < LIMIT:
+                order_for = min(-vol, LIMIT - cpos)
+                cpos += order_for
+                assert(order_for >= 0)
+                orders.append(Order(product, ask, order_for))
 
         undercut_buy = best_buy_pr + 1
         undercut_sell = best_sell_pr - 1
@@ -85,13 +85,13 @@ class Trader:
         cpos = self.position[product]
         
 
-        # for bid, vol in obuy.items():
-        #     if ((bid >= acc_ask) or ((self.position[product]>0) and (bid+1 == acc_ask))) and cpos > -LIMIT:
-        #         order_for = max(-vol, -LIMIT-cpos)
-        #         # order_for is a negative number denoting how much we will sell
-        #         cpos += order_for
-        #         assert(order_for <= 0)
-        #         orders.append(Order(product, bid, order_for))
+        for bid, vol in obuy.items():
+            if ((bid >= acc_ask) or ((self.position[product]>0) and (bid+1 == acc_ask))) and cpos > -LIMIT:
+                order_for = max(-vol, -LIMIT-cpos)
+                # order_for is a negative number denoting how much we will sell
+                cpos += order_for
+                assert(order_for <= 0)
+                orders.append(Order(product, bid, order_for))
 
         if cpos > -LIMIT:
             num = -LIMIT-cpos

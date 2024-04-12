@@ -63,8 +63,7 @@ class Trader:
 
         undercut_buy = best_buy_pr + 1
         undercut_sell = best_sell_pr - 1
-        adjustment = int((-self.position["STARFRUIT"])/18)
-        # /16 -> 1.6
+        adjustment = 0 # int((-self.position["STARFRUIT"])/10)
         bid_pr = min(undercut_buy, acc_bid)+adjustment # we will shift this by 1 to beat this price
         sell_pr = max(undercut_sell, acc_ask)+adjustment
         # bid_pr = acc_bid
@@ -124,6 +123,29 @@ class Trader:
         # clear cache from one value if full and cache the new mid value
         if len(self.starfruit_cache) == self.starfruit_dim:
             self.starfruit_cache.pop(0)
+
+        # -------------------------------------------
+        orders: List[Order] = []
+        ask_price = 0
+        bid_price = 0
+        
+        if state.position != {}:
+            buy_value, buy_quant = next(iter(state.order_depths["AMETHYSTS"].buy_orders.items()))
+            sell_value, sell_quant = next(iter(state.order_depths["AMETHYSTS"].sell_orders.items()))
+
+            ask_quant = -19 - state.position["AMETHYSTS"]
+            bid_quant = 19 - state.position["AMETHYSTS"]
+
+            adjustment = 0 # int((-self.position["AMETHYSTS"])/14)
+
+            if state.position["AMETHYSTS"] > -19:
+                orders.append(Order("AMETHYSTS", 10002, ask_quant+adjustment))
+            if state.position["AMETHYSTS"] < 19:
+                orders.append(Order("AMETHYSTS", 9998, bid_quant+adjustment))
+        elif state.position == {}:
+                orders.append(Order("AMETHYSTS", 9999, 2))
+                orders.append(Order("AMETHYSTS", 10001, -2))
+        result["AMETHYSTS"] = orders
 
 
         traderData ="SAMPLE"
