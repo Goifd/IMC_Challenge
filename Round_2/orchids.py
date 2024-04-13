@@ -123,39 +123,48 @@ logger = Logger()
 
 class Trader:
     # order_depths: Dict[Symbol, OrderDepth]
-
     
     def run(self, state: TradingState):
 
         orders: list[Order] = []
-        result = {'AMETHYSTS' : [], 'STARFRUIT': [], 'ORCHIDS': []}   
-
-        observations = state.observations 
-
-        ## try market making at same ask and bid ask best offers
+        result = {'AMETHYSTS' : [], 'STARFRUIT': [], 'ORCHIDS': []} 
+        trader_data = ""
+        conversions = 0  
 
         if len(state.order_depths["ORCHIDS"].sell_orders) != 0:
             best_ask, best_ask_amount = list(state.order_depths["ORCHIDS"].sell_orders.items())[0]
-
-        
-        # get lowest bid
         if len(state.order_depths["ORCHIDS"].buy_orders) != 0:
             best_bid, best_bid_amount = list(state.order_depths["ORCHIDS"].buy_orders.items())[0]
 
-        adjustment = 0
-        
+        # check result of previous iteration, settle it on neigh market
         if 'ORCHIDS' in state.position.keys():
-            max_ask_quant = -99 - state.position["ORCHIDS"]
-            max_bid_quant = 99 - state.position["ORCHIDS"]
-            adjustment = int((-state.position["ORCHIDS"])/10)
+            orchid_pos = state.position["ORCHIDS"]
+            max_ask_quant = -99 - orchid_pos
+            max_bid_quant = 99 - orchid_pos
+
+            conversions = -orchid_pos
+
         
-        orders.append(Order("ORCHIDS", best_ask-1+adjustment, -10))
-        orders.append(Order("ORCHIDS", best_bid+1+adjustment, 10))
+
+        # get neigh market data
+        neigh_bid = state.observations.conversionObservations['ORCHIDS'].bidPrice
+        neigh_ask = state.observations.conversionObservations['ORCHIDS'].askPrice
+        imp_tar = state.observations.conversionObservations['ORCHIDS'].importTariff
+        exp_tar = state.observations.conversionObservations['ORCHIDS'].exportTariff
+        trans_fees = state.observations.conversionObservations['ORCHIDS'].transportFees
+
+        # check if I can buy on island and sell to neighbours profitably
+        profit = neigh_bid-best_ask-exp_tar-trans_fees
+        if profit > 0:
+            orders.append(Order("ORCHIDS", best_ask, 99))
+
+        # check if I can buy from neighbours and sell on island profitably
+        profit = best_bid-neigh_ask-imp_tar-trans_fees
+        if profit > 0:
+            orders.append(Order("ORCHIDS", best_bid, -99))
+
 
         result["ORCHIDS"] = orders
-
-        trader_data = ""
-        conversions = 0
 
         logger.flush(state, result, conversions, trader_data)
 
