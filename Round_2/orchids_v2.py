@@ -121,6 +121,20 @@ from typing import Any
 
 # logger = Logger()
 
+def calc_next_prices_orchid(self):
+        # bananas cache stores price from 1 day ago, current day resp
+        # by price, here we mean mid price
+
+        # coef = [0.16179295, 0.14453001, 0.20387022, 0.16503886, 0.31240748]
+        # intercept = 61.6762187870645
+        coef = [0.1871, 0.2132, 0.2599, 0.3393]
+        intercept =  2.0597
+        nxt_price = intercept
+        for i, val in enumerate(self.starfruit_cache):
+            nxt_price += val * coef[i]
+
+        return int(round(nxt_price))
+
 class Trader:
     # order_depths: Dict[Symbol, OrderDepth]
     
@@ -129,7 +143,10 @@ class Trader:
         orders: list[Order] = []
         result = {'AMETHYSTS' : [], 'STARFRUIT': [], 'ORCHIDS': []} 
         trader_data = ""
-        conversions = 0  
+        conversions = 0 
+
+        orchid_dim = 20
+        orchid_cache = [] 
 
         if len(state.order_depths["ORCHIDS"].sell_orders) != 0:
             best_ask, best_ask_amount = list(state.order_depths["ORCHIDS"].sell_orders.items())[0]
