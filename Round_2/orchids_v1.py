@@ -126,11 +126,13 @@ class Trader:
     
     def run(self, state: TradingState):
 
-        orders: list[Order] = []
+        
         result = {'AMETHYSTS' : [], 'STARFRUIT': [], 'ORCHIDS': []} 
         trader_data = ""
         conversions = 0  
 
+
+        orders: list[Order] = []
         if len(state.order_depths["ORCHIDS"].sell_orders) != 0:
             best_ask, best_ask_amount = list(state.order_depths["ORCHIDS"].sell_orders.items())[0]
         if len(state.order_depths["ORCHIDS"].buy_orders) != 0:
@@ -144,16 +146,6 @@ class Trader:
 
             conversions = -orchid_pos
 
-        
-
-        # get neigh market data
-        print(state.observations.conversionObservations['ORCHIDS'].bidPrice)
-        print(state.observations.conversionObservations['ORCHIDS'].askPrice)
-        print(state.observations.conversionObservations['ORCHIDS'].importTariff)
-        print(state.observations.conversionObservations['ORCHIDS'].exportTariff)
-        print(state.observations.conversionObservations['ORCHIDS'].transportFees)
-        print(state.observations.conversionObservations['ORCHIDS'].sunlight)
-        print(state.observations.conversionObservations['ORCHIDS'].humidity)
         neigh_bid = state.observations.conversionObservations['ORCHIDS'].bidPrice
         neigh_ask = state.observations.conversionObservations['ORCHIDS'].askPrice
         imp_tar = state.observations.conversionObservations['ORCHIDS'].importTariff
