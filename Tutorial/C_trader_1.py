@@ -1,4 +1,4 @@
-from datamodel import OrderDepth, UserId, TradingState, Order
+from Round_3.datamodel import OrderDepth, UserId, TradingState, Order
 from typing import List
 import string
 
@@ -23,12 +23,8 @@ class Trader:
                 print(f"undercutting ask price @ : {sell_value}")
                 ask_quant = -19 - state.position["AMETHYSTS"]
                 bid_quant = 19 - state.position["AMETHYSTS"]
-                if state.position["AMETHYSTS"] > -19:
-                        orders.append(Order("AMETHYSTS", 10002, ask_quant))
-                        all_prices.add(ask_price)
-                if state.position["AMETHYSTS"] < 19:
-                        orders.append(Order("AMETHYSTS", 9998, bid_quant))
-                        all_prices.add(bid_price)
+
+
                 temp_store = state.position["AMETHYSTS"]
                 print(f"Bid Price @ {bid_price} Quantity @ {bid_quant}")
                 print(f"Ask Price @ {ask_price} Quantity @ {ask_quant}")

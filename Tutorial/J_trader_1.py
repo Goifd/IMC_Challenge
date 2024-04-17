@@ -1,4 +1,4 @@
-from datamodel import OrderDepth, UserId, TradingState, Order
+from Round_3.datamodel import OrderDepth, UserId, TradingState, Order
 from typing import List 
 import string
 
@@ -85,13 +85,8 @@ class Trader:
         cpos = self.position[product]
         
 
-        for bid, vol in obuy.items():
-            if ((bid >= acc_ask) or ((self.position[product]>0) and (bid+1 == acc_ask))) and cpos > -LIMIT:
-                order_for = max(-vol, -LIMIT-cpos)
-                # order_for is a negative number denoting how much we will sell
-                cpos += order_for
-                assert(order_for <= 0)
-                orders.append(Order(product, bid, order_for))
+
+
 
         if cpos > -LIMIT:
             num = -LIMIT-cpos

@@ -1,4 +1,4 @@
-from datamodel import OrderDepth, UserId, TradingState, Order
+from Round_3.datamodel import OrderDepth, UserId, TradingState, Order
 from typing import List 
 import string
 
@@ -46,6 +46,7 @@ class Trader:
             best_ask, best_ask_amount = list(order_depth.sell_orders.items())[-1]
             # best_ask = next(iter(order_depth.sell_orders.items()))
             return best_ask
+        
         
         # get lowest bid
         if len(order_depth.buy_orders) != 0 and side == 'buy':
